@@ -51,12 +51,16 @@ public class OFBExample {
         Security.addProvider(new BouncyCastleProvider());
         
         // 키 및 IV 생성
-        KeyGenerator keyGen = KeyGenerator.getInstance("ARIA");
-        keyGen.init(128);
-        SecretKey secretKey = keyGen.generateKey();
-        byte[] iv = new byte[16];
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(iv);
+        // KeyGenerator keyGen = KeyGenerator.getInstance("ARIA", "BC");
+        // keyGen.init(128);
+        // SecretKey secretKey = keyGen.generateKey();
+        byte[] key = "0123456789012345".getBytes();
+        SecretKey secretKey = new SecretKeySpec(key, "ARIA");
+        
+        // byte[] iv = new byte[16];
+        // SecureRandom random = new SecureRandom();
+        // random.nextBytes(iv);
+        byte[] iv = "0123456789012345".getBytes();
 
         // 초기화 벡터 (IV) 설정
         IvParameterSpec ivSpec = new IvParameterSpec(iv);

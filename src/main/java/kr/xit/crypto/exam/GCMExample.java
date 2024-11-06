@@ -62,14 +62,19 @@ public class GCMExample {
         Security.addProvider(new BouncyCastleProvider());
         
         // 키 및 IV 생성
-        KeyGenerator keyGen = KeyGenerator.getInstance("ARIA");
-        keyGen.init(128);
-        SecretKey secretKey = keyGen.generateKey();
+        // KeyGenerator keyGen = KeyGenerator.getInstance("ARIA", "BC");
+        // keyGen.init(128);
+        // SecretKey secretKey = keyGen.generateKey();
+        byte[] key = "0123456789012345".getBytes();
+        SecretKey secretKey = new SecretKeySpec(key, "ARIA");
 
         // 초기화 벡터 (IV) 생성
-        byte[] iv = new byte[16];  // GCM을 위해 권장되는 IV 길이는 16바이트입니다.
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(iv);
+        // byte[] iv = new byte[16];  // GCM을 위해 권장되는 IV 길이는 16바이트입니다.
+        // SecureRandom random = new SecureRandom();
+        // random.nextBytes(iv);
+        byte[] iv = "0123456789012345".getBytes();
+        
+        IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
         // 초기화 벡터 (IV) 설정
         GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);  // 128비트 인증 태그 사용

@@ -47,14 +47,21 @@ public class CFBExample {
         Security.addProvider(new BouncyCastleProvider());
         
         // 키 및 IV 생성
-        KeyGenerator keyGen = KeyGenerator.getInstance("ARIA");
-        keyGen.init(128);
-        SecretKey secretKey = keyGen.generateKey();
-        byte[] iv = new byte[16];
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(iv);
+        // KeyGenerator keyGen = KeyGenerator.getInstance("ARIA", "BC");
+        // keyGen.init(128);
+        // SecretKey secretKey = keyGen.generateKey();
+
+        // 16, 24, 32bytes 길이의 key를 사용할 수 있다
+        byte[] key = "0123456789012345".getBytes();
+        SecretKey secretKey = new SecretKeySpec(key, "ARIA");
 
         // 초기화 벡터 (IV) 설정
+        //byte[] iv = new byte[16];
+        //SecureRandom random = new SecureRandom();
+        //random.nextBytes(iv);
+        
+        // CCM 모드에서 iv는 7~13bytes 길이의 값이다 (12bytes 길이 권장)
+        byte[] iv = "0123456789012345".getBytes();
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
         // 암호화

@@ -61,16 +61,20 @@ public class CCMExample {
         Security.addProvider(new BouncyCastleProvider());
         
         // 키 및 IV 생성
-        KeyGenerator keyGen = KeyGenerator.getInstance("ARIA", "BC");
-        keyGen.init(128);
-        SecretKey secretKey = keyGen.generateKey();
-        byte[] iv = new byte[12]; // GCM을 위해 권장되는 IV 길이는 12바이트입니다.
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(iv);
+        // KeyGenerator keyGen = KeyGenerator.getInstance("ARIA", "BC");
+        // keyGen.init(128);
+        // SecretKey secretKey = keyGen.generateKey();
+        byte[] key = "0123456789012345".getBytes();
+        SecretKey secretKey = new SecretKeySpec(key, "ARIA");
 
         // 초기화 벡터 (IV) 설정
-        GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv); // 128비트 인증 태그 사용
-
+        // byte[] iv = new byte[12]; // GCM을 위해 권장되는 IV 길이는 12바이트입니다.
+        // SecureRandom random = new SecureRandom();
+        // random.nextBytes(iv);
+        //GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv); // 128비트 인증 태그 사용
+        byte[] iv = "012345678901".getBytes();
+        GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);;
+        
         // 암호화 설정
         Cipher cipher = Cipher.getInstance("ARIA/CCM/NoPadding");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmSpec);

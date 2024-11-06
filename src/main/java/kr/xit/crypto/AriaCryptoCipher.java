@@ -449,7 +449,7 @@ public class AriaCryptoCipher {
      * @param key
      * @param iv 7~13bytes 길이의 값이다 (12bytes 길이 권장)
      * @param plainText
-     * @param aad
+     * @param aad aad 값은 필수는 아니며, 길이는 2^64 bit보다 작아야 한다
      * @return
      * @throws InvalidCipherTextException
      * </pre>
@@ -476,7 +476,7 @@ public class AriaCryptoCipher {
      * @param key
      * @param iv 7~13bytes 길이의 값이다 (12bytes 길이 권장)
      * @param cipherText
-     * @param aad
+     * @param aad aad 값은 필수는 아니며, 길이는 2^64 bit보다 작아야 한다
      * @param mac
      * @return
      * @throws Exception
@@ -545,10 +545,10 @@ public class AriaCryptoCipher {
      *    - 다양한 응용 프로그램에서 널리 사용되며, 특히 고성능, 고보안 요구사항이 있는 상황에 적합
      *    - 초기 벡터(IV)의 관리와 인증 태그 처리에 주의하여야 한다.
      *    
-     * @param key
+     * @param key 16, 24, 32bytes 길이의 key를 사용할 수 있다
      * @param iv
      * @param plainText
-     * @param aad
+     * @param aad aad 값은 필수는 아니며, 길이는 2^64 bit보다 작아야 한다
      * @return
      * @throws Exception
      * </pre>
@@ -581,7 +581,8 @@ public class AriaCryptoCipher {
         try {
             cipher.doFinal(outputData, tam);
         } catch (InvalidCipherTextException e) {
-            throw new Exception("GCM authentication tag generation failed: " + e.getMessage(), e);
+            throw new Exception("GCM authentication tag generation failed: " + e.getMessage()
+                + ". Possible causes may include key mismatch, IV mismatch, corrupted cipherText or AAD.", e);
         }
 
         return outputData;
@@ -593,7 +594,7 @@ public class AriaCryptoCipher {
 
         try {
             // 16, 24, 32bytes 길이의 key를 사용할 수 있다
-            byte[] key = "0123456789012345".getBytes();
+            byte[] key = "123456789012345678901234".getBytes();
 
             // CCM 모드에서 iv는 7~13bytes 길이의 값이다 (12bytes 길이 권장)
             byte[] iv = "0123456789012345".getBytes();

@@ -1,0 +1,14 @@
+spring.application.name: crypto
+
+app:
+  jasypt:
+    secretKey: xit5811807!@
+    alg: PBEWithMD5AndDES
+    type: base64
+  crypto:
+    alg: ARIA
+    mode: GCM
+    # 16, 24, 32bytes \uAE38\uC774\uC758 key\uB97C \uC0AC\uC6A9\uD560 \uC218 \uC788\uB2E4
+    key: ENC(K9jZikwRqCDNulWCjvBN4yFkILZsNqekzSwS9n3A2U9cATPF8LOB2g==)
+    # 16bytes - CCM \uBAA8\uB4DC\uC5D0\uC11C iv\uB294 7~13bytes \uAE38\uC774\uC758 \uAC12\uC774\uB2E4 (12bytes \uAE38\uC774 \uAD8C\uC7A5)
+    iv: ENC(gXac4g0Qo5PAJVRFvd2LI+KMlyzfA+xwDGX5vhN1+Sw=) 

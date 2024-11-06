@@ -1,5 +1,6 @@
 # crypto
 LEA / ARIA 암호화 모듈
+> jdk1.8 over
 
 ### LEA / ARIA Engine Algorithms
 > bouncycastle 라이브러리 사용시 ARIAEngine or LEAEngine 으로만 변경하면 됨

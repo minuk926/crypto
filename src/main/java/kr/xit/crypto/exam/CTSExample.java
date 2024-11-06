@@ -6,6 +6,8 @@ import java.util.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 
+import org.bouncycastle.jce.provider.*;
+
 /**
  * <pre>
  * 암호화 모드 - CTS (Cipher Text Stealing)
@@ -42,8 +44,11 @@ import javax.crypto.spec.*;
  */
 public class CTSExample {
     public static void main(String[] args) throws Exception {
+        // BouncyCastle 프로바이더 추가
+        Security.addProvider(new BouncyCastleProvider());
+        
         // 키 및 IV 생성
-        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        KeyGenerator keyGen = KeyGenerator.getInstance("ARIA", "BC");
         keyGen.init(128);
         SecretKey secretKey = keyGen.generateKey();
         byte[] iv = new byte[16];
@@ -54,10 +59,10 @@ public class CTSExample {
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
         // 평문 설정 (가변 길이)
-        byte[] plainText = "Hello, World! This is a test for CTS.".getBytes("UTF-8");
+        byte[] plainText = "Hello, World! This is a test for ARIA/CTS.".getBytes("UTF-8");
 
         // 암호화
-        Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+        Cipher cipher = Cipher.getInstance("ARIA/CTS/NoPadding");
         int blockSize = cipher.getBlockSize();
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
 
@@ -67,6 +72,10 @@ public class CTSExample {
 
         // 암호화 수행
         byte[] encryptedText = cipher.doFinal(paddedText);
+
+        // 암호문을 Base64으로 인코딩 (출력 전시용)
+        String encryptedBase64 = Base64.getEncoder().encodeToString(encryptedText);
+        System.out.println("암호화된 텍스트 (Base64 인코딩): " + encryptedBase64);
 
         // CTS 방식으로 마지막 블록 조정
         int lastBlockStart = encryptedText.length - blockSize;
@@ -85,6 +94,7 @@ public class CTSExample {
         decryptedText = Arrays.copyOf(decryptedText, plainText.length);
 
         // 결과 출력
-        System.out.println(new String(decryptedText, "UTF-8"));
+        System.out.println("암호화된 텍스트: " + new String(encryptedText, "UTF-8"));
+        System.out.println("복호화된 텍스트: " + new String(decryptedText, "UTF-8"));
     }
 }

@@ -1,9 +1,12 @@
 package kr.xit.crypto.exam;
 
 import java.security.*;
+import java.util.*;
 
 import javax.crypto.*;
 import javax.crypto.spec.*;
+
+import org.bouncycastle.jce.provider.*;
 
 /**
  * <pre>
@@ -45,8 +48,11 @@ import javax.crypto.spec.*;
  */
 public class CTRExample {
     public static void main(String[] args) throws Exception {
+        // BouncyCastle 프로바이더 추가
+        Security.addProvider(new BouncyCastleProvider());
+        
         // 키 및 IV 생성
-        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        KeyGenerator keyGen = KeyGenerator.getInstance("ARIA", "BC");
         keyGen.init(128);
         SecretKey secretKey = keyGen.generateKey();
         byte[] iv = new byte[16];
@@ -57,10 +63,14 @@ public class CTRExample {
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
         // 암호화 설정
-        Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
+        Cipher cipher = Cipher.getInstance("ARIA/CTR/NoPadding");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
-        byte[] plainText = "Hello, World! This is a test for CTR mode.".getBytes("UTF-8");
+        byte[] plainText = "Hello, World! This is a test for ARIA/CTR mode.".getBytes("UTF-8");
         byte[] encryptedText = cipher.doFinal(plainText);
+
+        // 암호문을 Base64으로 인코딩 (출력 전시용)
+        String encryptedBase64 = Base64.getEncoder().encodeToString(encryptedText);
+        System.out.println("암호화된 텍스트 (Base64 인코딩): " + encryptedBase64);
 
         // 복호화 설정
         cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec);

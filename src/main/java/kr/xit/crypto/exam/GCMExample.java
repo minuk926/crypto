@@ -6,6 +6,8 @@ import java.util.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 
+import org.bouncycastle.jce.provider.*;
+
 /**
  * <pre>
  * 암호화 모드 - GCM (Galois/Counter Mode) 데이터의 기밀성과 무결성을 동시에 제공하는 암호화 모드
@@ -56,11 +58,16 @@ import javax.crypto.spec.*;
  */
 public class GCMExample {
     public static void main(String[] args) throws Exception {
+        // BouncyCastle 프로바이더 추가
+        Security.addProvider(new BouncyCastleProvider());
+        
         // 키 및 IV 생성
-        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        KeyGenerator keyGen = KeyGenerator.getInstance("ARIA");
         keyGen.init(128);
         SecretKey secretKey = keyGen.generateKey();
-        byte[] iv = new byte[12];  // GCM을 위해 권장되는 IV 길이는 12바이트입니다.
+
+        // 초기화 벡터 (IV) 생성
+        byte[] iv = new byte[16];  // GCM을 위해 권장되는 IV 길이는 16바이트입니다.
         SecureRandom random = new SecureRandom();
         random.nextBytes(iv);
 
@@ -68,10 +75,10 @@ public class GCMExample {
         GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);  // 128비트 인증 태그 사용
 
         // 평문 설정
-        byte[] plainText = "Hello, World! This is a test for GCM mode.".getBytes("UTF-8");
+        byte[] plainText = "Hello, World! This is a test for ARIA/GCM mode.".getBytes("UTF-8");
 
         // 암호화 설정
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        Cipher cipher = Cipher.getInstance("ARIA/GCM/NoPadding", "BC");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmSpec);
         byte[] encryptedText = cipher.doFinal(plainText);
 
@@ -84,6 +91,7 @@ public class GCMExample {
         byte[] decryptedText = cipher.doFinal(encryptedText);
 
         // 결과 출력
+        System.out.println("암호화된 텍스트: " + new String(encryptedText, "UTF-8"));
         System.out.println("복호화된 텍스트: " + new String(decryptedText, "UTF-8"));
     }
 }

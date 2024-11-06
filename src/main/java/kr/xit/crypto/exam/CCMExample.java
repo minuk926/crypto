@@ -6,6 +6,8 @@ import java.util.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 
+import org.bouncycastle.jce.provider.*;
+
 /**
  * <pre>
  * 암호화 모드 - CCM (Counter with CBC-MAC) 데이터의 기밀성과 무결성을 동시에 제공하는 암호화 모드
@@ -55,8 +57,11 @@ import javax.crypto.spec.*;
  */
 public class CCMExample {
     public static void main(String[] args) throws Exception {
+        // BouncyCastle 프로바이더 추가
+        Security.addProvider(new BouncyCastleProvider());
+        
         // 키 및 IV 생성
-        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        KeyGenerator keyGen = KeyGenerator.getInstance("ARIA", "BC");
         keyGen.init(128);
         SecretKey secretKey = keyGen.generateKey();
         byte[] iv = new byte[12]; // GCM을 위해 권장되는 IV 길이는 12바이트입니다.
@@ -67,10 +72,14 @@ public class CCMExample {
         GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv); // 128비트 인증 태그 사용
 
         // 암호화 설정
-        Cipher cipher = Cipher.getInstance("AES/CCM/NoPadding");
+        Cipher cipher = Cipher.getInstance("ARIA/CCM/NoPadding");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmSpec);
-        byte[] plainText = "Hello, World! This is a test for CCM mode.".getBytes("UTF-8");
+        byte[] plainText = "Hello, World! This is a test for ARIA/CCM mode.".getBytes("UTF-8");
         byte[] encryptedText = cipher.doFinal(plainText);
+
+        // 암호문을 Base64으로 인코딩 (출력 전시용)
+        String encryptedBase64 = Base64.getEncoder().encodeToString(encryptedText);
+        System.out.println("암호화된 텍스트 (Base64 인코딩): " + encryptedBase64);
 
         // 복호화 설정
         cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmSpec);

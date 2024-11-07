@@ -1,6 +1,12 @@
 # crypto
 LEA / ARIA 암호화 모듈
-> jdk1.8 over
+> jdk1.8 이상
+> 암호화 key, iv 등은 Base64로 encoding하여 사용
+> > 암복호화시 key, iv 등을 Base64로 decoding 하여 실행
+
+### 암복호화 키 생성
+> JasyptConfig.java 참조
+> 랜덤 키 생성 -> Base64 encoding -> jasypt 으로 encoding
 
 ### LEA / ARIA Engine Algorithms
 > bouncycastle 라이브러리 사용시 ARIAEngine or LEAEngine 으로만 변경하면 됨

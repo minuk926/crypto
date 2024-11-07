@@ -1,5 +1,8 @@
 package kr.xit.crypto.config;
 
+import java.security.*;
+import java.util.*;
+
 import org.jasypt.encryption.*;
 import org.jasypt.encryption.pbe.*;
 import org.jasypt.encryption.pbe.config.*;
@@ -53,18 +56,22 @@ public class JasyptConfig {
         return encryptor;
     }
     
-    public static void main(String[] args) {
+    // FIXME : 랜덤하게 키 생성후 Base64로 encoding한 값 사용
+    public static void main(String[] args) throws NoSuchAlgorithmException, NoSuchProviderException {
         StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
         encryptor.setAlgorithm("PBEWithMD5AndDES");
         encryptor.setPassword("xit5811807!@");
 
-        String key = encryptor.encrypt("123456789012345678901234");
-        String iv = encryptor.encrypt("1234567890123456");
+        SecureRandom secureRandom = new SecureRandom();
+        byte[] key = new byte[32];
+        secureRandom.nextBytes(key);
+        System.out.println(Base64.getEncoder().encodeToString(key));
+        System.out.println("key: ["+encryptor.encrypt(Base64.getEncoder().encodeToString(key))+"]");
 
-        System.out.println(key);
-        System.out.println(iv);
-        System.out.println(encryptor.decrypt(key));
-        System.out.println(encryptor.decrypt(iv));
+        byte[] iv = new byte[16];
+        secureRandom.nextBytes(iv);
+        System.out.println(Base64.getEncoder().encodeToString(iv));
+        System.out.println("iv: ["+ encryptor.encrypt(Base64.getEncoder().encodeToString(iv))+"]");
     }
 
 }

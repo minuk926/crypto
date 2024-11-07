@@ -8,12 +8,14 @@ import org.springframework.test.context.TestPropertySource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import kr.xit.crypto.service.*;
+
 @SpringBootTest
 @TestPropertySource(properties = {
     "app.crypto.alg=ARIA",
     "app.crypto.mode=GCM",
-    "app.crypto.key=123456789012345678901234",
-    "app.crypto.iv=1234567890123456"
+    "app.crypto.key=4dVAF8dClfelcZjfFU7gg9kgEI7CTjOMQGDyHna236Y=",
+    "app.crypto.iv=NZc5qzWFi/p5wb8HKYzGKA=="
 })
 public class CryptoCipherServiceTest {
 

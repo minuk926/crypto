@@ -1,4 +1,4 @@
-package kr.xit.crypto;
+package kr.xit.crypto.util;
 
 import java.util.*;
 
@@ -8,28 +8,30 @@ import org.bouncycastle.crypto.modes.*;
 import org.bouncycastle.crypto.paddings.*;
 import org.bouncycastle.crypto.params.*;
 
+import kr.xit.crypto.config.*;
+
 /**
  * <pre>
- * LEA (Lightweight Encryption Algorithm)
- *   - LEA는 한국의 ETRI(Electronics and Telecommunications Research Institute)와 KISA(Korea Internet & Security Agency)에 의해 개발된 블록 암호 알고리즘
- *   - 주로 IoT 장치와 같이 자원 제한적인 환경에서의 사용을 고려하여 설계
- * 
+ * ARIA (Academy Research Institute Algorithm)
+ *    - ARIA는 ETRI, KISA 및 학계의 연구자들에 의해 개발된 블록 암호 알고리즘
+ *    - 주로 금융 및 정부 기관에서의 사용을 고려하여 설계
+ *    
  * 특징
- * 1. 경량성:
- *    - CPU 및 메모리 자원이 제한된 환경에서도 효율적으로 동작할 수 있도록 설계
+ * 1. 보안성:
+ *    - AES(Advanced Encryption Standard) 기반 설계로 높은 보안성을 제공
+ *    - 한국 국가 표준 암호 알고리즘으로 채택
  * 2. 블록 크기 및 키 크기:
- *    - LEA는 128비트 블록 크기를 사용하며, 128비트, 192비트, 256비트 키 길이를 지원
+ *    - ARIA는 128비트 블록 크기를 사용하며, 128비트, 192비트, 256비트 키 길이를 지원
  * 3. 라운드 구조:
- *    - LEA는 다양한 키 크기에 따라 24, 28, 32라운드의 암호화 라운드를 가진다.
- * 4. 단순 연산:
- *    - 모듈러 덧셈, XOR, 좌측 및 우측 시프트와 같은 간단한 비트 연산을 주로 사용
- *      -> 덕분에 빠른 속도
- *
- * --> GCM, CCM 모드 확인     
+ *    - 키 크기에 따라 12, 14, 16라운드의 암호화 라운드를 가진다.
+ * 4. 효율성:
+ *    - 소프트웨어와 하드웨어 모두에서 동작
+ *    
+ * --> GCM, CCM 모드 확인    
  *    
  * description : 
- * packageName : kr.xit.crypto
- * fileName    : LeaCryptoCipher
+ * packageName : kr.xit.crypto.util
+ * fileName    : AriaCryptoCipher
  * author      : limju
  * date        : 2024 11월 06
  * ======================================================================
@@ -39,7 +41,7 @@ import org.bouncycastle.crypto.params.*;
  *
  * </pre>
  */
-public class LeaCryptoCipher {
+public class AriaCryptoCipher {
 
     /**
      * <pre>
@@ -57,16 +59,19 @@ public class LeaCryptoCipher {
      * @throws Exception
      * </pre>
      */
-    public static byte[] encryptECB(byte[] key, byte[] plainText) throws Exception {
+    public static byte[] encryptECB(byte[] key, byte[] plainText) {
 
         // block size가 16의 배수가 아닐경우, 암호화가 안될수 있으므로 항상 데이터를 패딩한다
-        BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new LEAEngine());
+        BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new ARIAEngine());
         cipher.init(true, new KeyParameter(key));
 
         byte[] outputData = new byte[cipher.getOutputSize(plainText.length)];
         int tam = cipher.processBytes(plainText, 0, plainText.length, outputData, 0);
-        cipher.doFinal(outputData, tam);
-
+        try {
+            cipher.doFinal(outputData, tam);
+        } catch (InvalidCipherTextException e) {
+            throw BizRuntimeException.create(e);
+        }
         return outputData;
     }
 
@@ -79,13 +84,19 @@ public class LeaCryptoCipher {
      * @throws Exception
      * </pre>
      */
-    public static byte[] decryptECB(byte[] key, byte[] cipherText) throws Exception {
-        BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new LEAEngine());
+    public static byte[] decryptECB(byte[] key, byte[] cipherText) {
+        BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new ARIAEngine());
         cipher.init(false, new KeyParameter(key));
 
         byte[] outputData = new byte[cipher.getOutputSize(cipherText.length)];
         int tam = cipher.processBytes(cipherText, 0, cipherText.length, outputData, 0);
-        int finalLen = cipher.doFinal(outputData, tam);
+        
+        int finalLen;
+        try{
+            finalLen = cipher.doFinal(outputData, tam);
+        } catch (InvalidCipherTextException e) {
+            throw BizRuntimeException.create(e);
+        }
 
         return Arrays.copyOfRange(outputData, 0, finalLen + tam);
     }
@@ -129,24 +140,35 @@ public class LeaCryptoCipher {
      * @throws Exception
      * </pre>
      */
-    public static byte[] encryptCBC(byte[] key, byte[] iv, byte[] plainText) throws Exception {
-        BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(CBCBlockCipher.newInstance(new LEAEngine()));
+    public static byte[] encryptCBC(byte[] key, byte[] iv, byte[] plainText) {
+        BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(CBCBlockCipher.newInstance(new ARIAEngine()));
         cipher.init(true, new ParametersWithIV(new KeyParameter(key), iv));
 
         byte[] outputData = new byte[cipher.getOutputSize(plainText.length)];
         int tam = cipher.processBytes(plainText, 0, plainText.length, outputData, 0);
-        cipher.doFinal(outputData, tam);
+        
+        try{
+            cipher.doFinal(outputData, tam);
+        } catch (InvalidCipherTextException e) {
+            throw BizRuntimeException.create(e);
+        }
 
         return outputData;
     }
 
-    public static byte[] decryptCBC(byte[] key, byte[] iv, byte[] cipherText) throws Exception {
-        BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(CBCBlockCipher.newInstance(new LEAEngine()));
+    public static byte[] decryptCBC(byte[] key, byte[] iv, byte[] cipherText) {
+        BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(CBCBlockCipher.newInstance(new ARIAEngine()));
         cipher.init(false, new ParametersWithIV(new KeyParameter(key), iv));
 
         byte[] outputData = new byte[cipher.getOutputSize(cipherText.length)];
         int tam = cipher.processBytes(cipherText, 0, cipherText.length, outputData, 0);
-        int finalLen = cipher.doFinal(outputData, tam);
+        
+        int finalLen;
+        try{
+            finalLen = cipher.doFinal(outputData, tam);
+        } catch (InvalidCipherTextException e) {
+            throw BizRuntimeException.create(e);
+        }
 
         return Arrays.copyOfRange(outputData, 0, finalLen + tam);
     }
@@ -192,7 +214,7 @@ public class LeaCryptoCipher {
     public static byte[] encryptCFB(byte[] key, byte[] iv, byte[] plainText) {
 
         // blockSize는 64 혹은 128만 입력 가능 (128 권장)
-        CFBModeCipher cipher = CFBBlockCipher.newInstance(new LEAEngine(), 128);
+        CFBModeCipher cipher = CFBBlockCipher.newInstance(new ARIAEngine(), 128);
         cipher.init(true, new ParametersWithIV(new KeyParameter(key), iv));
 
         byte[] outputData = new byte[plainText.length];
@@ -202,7 +224,7 @@ public class LeaCryptoCipher {
     }
 
     public static byte[] decryptCFB(byte[] key, byte[] iv, byte[] cipherText) {
-        CFBModeCipher cipher = CFBBlockCipher.newInstance(new LEAEngine(), 128);
+        CFBModeCipher cipher = CFBBlockCipher.newInstance(new ARIAEngine(), 128);
         cipher.init(false, new ParametersWithIV(new KeyParameter(key), iv));
 
         byte[] result = new byte[cipherText.length];
@@ -257,7 +279,7 @@ public class LeaCryptoCipher {
 
         // blockSize는 8 혹은 16만 입력 가능 (16 권장)
         // OFBBlockCipher는 newInstance() 메소드가 없다
-        OFBBlockCipher cipher = new OFBBlockCipher(new LEAEngine(), 16);
+        OFBBlockCipher cipher = new OFBBlockCipher(new ARIAEngine(), 16);
         cipher.init(true, new ParametersWithIV(new KeyParameter(key), iv));
 
         byte[] outputData = new byte[plainText.length];
@@ -267,7 +289,7 @@ public class LeaCryptoCipher {
     }
 
     public static byte[] decryptOFB(byte[] key, byte[] iv, byte[] cipherText) {
-        OFBBlockCipher cipher = new OFBBlockCipher(new LEAEngine(), 16);
+        OFBBlockCipher cipher = new OFBBlockCipher(new ARIAEngine(), 16);
         cipher.init(false, new ParametersWithIV(new KeyParameter(key), iv));
 
         byte[] result = new byte[cipherText.length];
@@ -315,24 +337,34 @@ public class LeaCryptoCipher {
      * @throws Exception
      * </pre>
      */
-    public static byte[] encryptCTS(byte[] key, byte[] plainText) throws Exception {
-        CTSBlockCipher cipher = new CTSBlockCipher(new LEAEngine());
+    public static byte[] encryptCTS(byte[] key, byte[] plainText) {
+        CTSBlockCipher cipher = new CTSBlockCipher(new ARIAEngine());
         cipher.init(true, new KeyParameter(key));
 
         byte[] outputData = new byte[plainText.length];
         int tam = cipher.processBytes(plainText, 0, plainText.length, outputData, 0);
-        cipher.doFinal(outputData, tam);
+        
+        try{
+            cipher.doFinal(outputData, tam);
+        } catch (InvalidCipherTextException e) {
+            throw BizRuntimeException.create(e);
+        }
 
         return outputData;
     }
 
-    public static byte[] decryptCTS(byte[] key, byte[] cipherText) throws Exception {
-        CTSBlockCipher cipher = new CTSBlockCipher(new LEAEngine());
+    public static byte[] decryptCTS(byte[] key, byte[] cipherText) {
+        CTSBlockCipher cipher = new CTSBlockCipher(new ARIAEngine());
         cipher.init(false, new KeyParameter(key));
 
         byte[] result = new byte[cipherText.length];
         int finalLen = cipher.processBytes(cipherText, 0, cipherText.length, result, 0);
-        cipher.doFinal(result, finalLen);
+        
+        try{
+            cipher.doFinal(result, finalLen);
+        } catch (InvalidCipherTextException e) {
+            throw BizRuntimeException.create(e);
+        }
 
         return result;
     }
@@ -381,7 +413,7 @@ public class LeaCryptoCipher {
      * </pre>
      */
     public static byte[] encryptCTR(byte[] key, byte[] iv, byte[] plainText) {
-        CTRModeCipher cipher = SICBlockCipher.newInstance(new LEAEngine());
+        CTRModeCipher cipher = SICBlockCipher.newInstance(new ARIAEngine());
         cipher.init(true, new ParametersWithIV(new KeyParameter(key), iv));
 
         byte[] outputData = new byte[plainText.length];
@@ -391,7 +423,7 @@ public class LeaCryptoCipher {
     }
 
     public static byte[] decryptCTR(byte[] key, byte[] iv, byte[] cipherText) {
-        CTRModeCipher cipher = SICBlockCipher.newInstance(new LEAEngine());
+        CTRModeCipher cipher = SICBlockCipher.newInstance(new ARIAEngine());
         cipher.init(false, new ParametersWithIV(new KeyParameter(key), iv));
 
         byte[] result = new byte[cipherText.length];
@@ -449,20 +481,24 @@ public class LeaCryptoCipher {
      * @param key
      * @param iv 7~13bytes 길이의 값이다 (12bytes 길이 권장)
      * @param plainText
-     * @param aad
+     * @param aad aad 값은 필수는 아니며, 길이는 2^64 bit보다 작아야 한다
      * @return
      * @throws InvalidCipherTextException
      * </pre>
      */
-    public static List<byte[]> encryptCCM(byte[] key, byte[] iv, byte[] plainText, byte[] aad) throws
-        InvalidCipherTextException {
+    public static List<byte[]> encryptCCM(byte[] key, byte[] iv, byte[] plainText, byte[] aad) {
         int macSize = 128;
-        CCMModeCipher cipher = CCMBlockCipher.newInstance(new LEAEngine());
+        CCMModeCipher cipher = CCMBlockCipher.newInstance(new ARIAEngine());
         cipher.init(true, new AEADParameters(new KeyParameter(key), macSize, iv, aad));
 
         byte[] outputData = new byte[cipher.getOutputSize(plainText.length)];
         int tam = cipher.processBytes(plainText, 0, plainText.length, outputData, 0);
-        cipher.doFinal(outputData, tam);
+        
+        try{
+            cipher.doFinal(outputData, tam);
+        } catch (InvalidCipherTextException e) {
+            throw BizRuntimeException.create(e);
+        }
 
         List<byte[]> arr = new ArrayList<>();
         arr.add(outputData);
@@ -476,23 +512,28 @@ public class LeaCryptoCipher {
      * @param key
      * @param iv 7~13bytes 길이의 값이다 (12bytes 길이 권장)
      * @param cipherText
-     * @param aad
+     * @param aad aad 값은 필수는 아니며, 길이는 2^64 bit보다 작아야 한다
      * @param mac
      * @return
      * @throws Exception
      */
-    public static byte[] decryptCCM(byte[] key, byte[] iv, byte[] cipherText, byte[] aad, byte[] mac) throws Exception {
+    public static byte[] decryptCCM(byte[] key, byte[] iv, byte[] cipherText, byte[] aad, byte[] mac) {
         int macSize = 128;
-        CCMModeCipher cipher = CCMBlockCipher.newInstance(new LEAEngine());
+        CCMModeCipher cipher = CCMBlockCipher.newInstance(new ARIAEngine());
         cipher.init(false, new AEADParameters(new KeyParameter(key), macSize, iv, aad));
 
         byte[] result = new byte[cipher.getOutputSize(cipherText.length)];
         int tam = cipher.processBytes(cipherText, 0, cipherText.length, result, 0);
-        cipher.doFinal(result, tam);
+        
+        try {
+            cipher.doFinal(result, tam);
+        } catch (InvalidCipherTextException e) {
+            throw BizRuntimeException.create(e);
+        }
 
         // encrypt의 cipher.mac 값과 decrypt의 cipher.mac 값이 다르면 암호화 된 데이터가 위조 혹은 변조된 것이다
         if (!Arrays.equals(mac, cipher.getMac())) {
-            throw new Exception("데이터가 위변조되었습니다.");
+            throw BizRuntimeException.create("데이터가 위변조되었습니다.");
         }
 
         return result;
@@ -544,18 +585,18 @@ public class LeaCryptoCipher {
      *      데이터의 기밀성과 무결성을 동시에 보장
      *    - 다양한 응용 프로그램에서 널리 사용되며, 특히 고성능, 고보안 요구사항이 있는 상황에 적합
      *    - 초기 벡터(IV)의 관리와 인증 태그 처리에 주의하여야 한다.
-     *
-     * @param key
+     *    
+     * @param key 16, 24, 32bytes 길이의 key를 사용할 수 있다
      * @param iv
      * @param plainText
-     * @param aad
+     * @param aad aad 값은 필수는 아니며, 길이는 2^64 bit보다 작아야 한다
      * @return
      * @throws Exception
      * </pre>
      */
-    public static byte[] encryptGCM(byte[] key, byte[] iv, byte[] plainText, byte[] aad) throws Exception {
+    public static byte[] encryptGCM(byte[] key, byte[] iv, byte[] plainText, byte[] aad) {
         int macSize = 128;
-        GCMModeCipher cipher = GCMBlockCipher.newInstance(new LEAEngine());
+        GCMModeCipher cipher = GCMBlockCipher.newInstance(new ARIAEngine());
         cipher.init(true, new AEADParameters(new KeyParameter(key), macSize, iv, aad));
 
         byte[] encryptedData = new byte[cipher.getOutputSize(plainText.length)];
@@ -564,15 +605,15 @@ public class LeaCryptoCipher {
         try {
             cipher.doFinal(encryptedData, tam);
         } catch (InvalidCipherTextException e) {
-            throw new Exception("GCM authentication tag generation failed: " + e.getMessage(), e);
+            throw BizRuntimeException.create(e);
         }
 
         return encryptedData;
     }
 
-    public static byte[] decryptGCM(byte[] key, byte[] iv, byte[] cipherText, byte[] aad) throws Exception {
+    public static byte[] decryptGCM(byte[] key, byte[] iv, byte[] cipherText, byte[] aad) {
         int macSize = 128;
-        GCMModeCipher cipher = GCMBlockCipher.newInstance(new LEAEngine());
+        GCMModeCipher cipher = GCMBlockCipher.newInstance(new ARIAEngine());
         cipher.init(false, new AEADParameters(new KeyParameter(key), macSize, iv, aad));
 
         byte[] outputData = new byte[cipher.getOutputSize(cipherText.length)];
@@ -581,7 +622,7 @@ public class LeaCryptoCipher {
         try {
             cipher.doFinal(outputData, tam);
         } catch (InvalidCipherTextException e) {
-            throw new Exception("GCM authentication tag generation failed: " + e.getMessage(), e);
+            throw BizRuntimeException.create(e);
         }
 
         return outputData;
@@ -593,7 +634,7 @@ public class LeaCryptoCipher {
 
         try {
             // 16, 24, 32bytes 길이의 key를 사용할 수 있다
-            byte[] key = "0123456789012345".getBytes();
+            byte[] key = "123456789012345678901234".getBytes();
 
             // CCM 모드에서 iv는 7~13bytes 길이의 값이다 (12bytes 길이 권장)
             byte[] iv = "0123456789012345".getBytes();

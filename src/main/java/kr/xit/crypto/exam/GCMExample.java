@@ -65,14 +65,16 @@ public class GCMExample {
         // KeyGenerator keyGen = KeyGenerator.getInstance("ARIA", "BC");
         // keyGen.init(128);
         // SecretKey secretKey = keyGen.generateKey();
-        byte[] key = "0123456789012345".getBytes();
+        //byte[] key = "0123456789012345".getBytes();
+        byte[] key = Base64.getDecoder().decode("hz/xHk8Nw9om20w8RXKrbcZawLQnpg2Nmo5nRrDnb/k=");
         SecretKey secretKey = new SecretKeySpec(key, "ARIA");
 
         // 초기화 벡터 (IV) 생성
         // byte[] iv = new byte[16];  // GCM을 위해 권장되는 IV 길이는 16바이트입니다.
         // SecureRandom random = new SecureRandom();
         // random.nextBytes(iv);
-        byte[] iv = "0123456789012345".getBytes();
+        //byte[] iv = "0123456789012345".getBytes();
+        byte[] iv = Base64.getDecoder().decode("asd2Su0JLddE2HeZNTwV7A==");
         
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
